@@ -164,15 +164,19 @@ static void countToMM(S32 actualCounts, U16 entrie)
       + P_HubLinearEncOutMinBlade ) + P_HubLinearEncOffsetBlade;
 }
 //resolution at 48MHz 0.0572mm
+//resolution at 48MHz by datasheet is 2.76329mm/us / 48 =
+//0.05756854166666666666666666666667
 int main(void)
 {
    FILE *fileDesc;
    fileDesc = fopen("linEnc.csv", "w");
 
-   fprintf(fileDesc, "period,counts,angle_us,angleCounts,angleMM,MM\n");
+   fprintf(fileDesc, "period,counts,angle_us,angleCounts,angleMM,MM,"\
+                     "MMDataSheet\n");
    initLookUpTable();
    S32 actualPos_us = linearEncLookUpTable[0].position_us;
    S32 actualPosMM = linearEncLookUpTable[0].positionMM;
+   S32 actualPosMMDataSheet = linearEncLookUpTable[0].positionMM;
 
    static S32 angleCalcUs;
    static S32 angleCalcCounts;
@@ -204,8 +208,9 @@ int main(void)
       interpolateEncoderData( actualPosCounts, &angleCalcMM,
                               linearEncLookUpTable, MM );
 
-      fprintf( fileDesc, "%i,%i,%i,%i,%i,%i\n", actualPos_us, actualPosCounts,
-               angleCalcUs, angleCalcCounts, angleCalcMM, actualPosMM );
+      fprintf( fileDesc, "%i,%i,%i,%i,%i,%i,%i\n", actualPos_us, actualPosCounts,
+               angleCalcUs, angleCalcCounts, angleCalcMM, actualPosMM,
+               actualPosMMDataSheet );
 
       actualPosCounts += 1;
       //actualPos_us scale 100
@@ -215,6 +220,9 @@ int main(void)
       actualPosMM = (S32)round(
                   (F32)(actualPosCounts - linearEncLookUpTable[0].positionCount)
                                  * 5.725650916104146576663452266152 );
+      actualPosMMDataSheet = (S32)round(
+                  (F32)(actualPosCounts - linearEncLookUpTable[0].positionCount)
+                                 * 5.756854166666666666666666666667 );
    }
 /**/
    fclose(fileDesc);
